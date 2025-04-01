@@ -40,22 +40,35 @@ yarn install
 ### 3. Supabase Setup
 
 #### a. Create a Supabase Project
-1. Go to [Supabase](https://supabase.com) and sign in
-2. Create a new project
-3. Once created, go to Project Settings > API
-4. Note down the following credentials:
-   - Project URL
-   - Project API Keys (anon key and service_role key)
-   - Project Reference ID
-   - Database Password
 
-#### b. Configure Environment Variables
-1. Copy `.env.example` to `.env.local`:
+1. Go to [Supabase Dashboard](https://supabase.com/dashboard)
+2. Click "New Project"
+3. Fill in your project details:
+   - Name your project
+   - Set a secure database password
+   - Choose a region closest to your users
+4. Wait for the project to be created
+
+#### b. Get Your Project Credentials
+
+1. Go to your project's dashboard
+2. Navigate to Project Settings > API
+3. Copy these values:
+   - Project URL (under "Project URL")
+   - Project API Keys (both `anon` and `service_role` keys)
+   - Project Reference ID (under "Project Reference ID")
+4. Go to Project Settings > Database
+5. Copy your database password (or reset it if needed)
+
+#### c. Configure Environment Variables
+
+1. Copy the example environment file:
    ```bash
    cp .env.example .env.local
    ```
+
 2. Update `.env.local` with your Supabase credentials:
-   ```env
+   ```
    NEXT_PUBLIC_SUPABASE_URL=your_project_url
    NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
    SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
@@ -63,24 +76,45 @@ yarn install
    SUPABASE_PROJECT_ID=your_project_id
    ```
 
-#### c. Update Supabase Configuration
-1. Open `supabase/config.toml`
-2. Replace `project_id = "your-project-id"` with your actual project ID
+#### d. Initialize Supabase
 
-#### d. Initialize Supabase CLI
-```bash
-# Install Supabase CLI if not already installed
-npm install supabase --save-dev
+1. Install Supabase CLI:
+   ```bash
+   npm install supabase --save-dev
+   ```
 
-# Initialize Supabase
-npx supabase init
+2. Initialize Supabase (this will create necessary configuration files):
+   ```bash
+   npx supabase init
+   ```
 
-# Link to your project
-npx supabase link --project-ref your-project-id
+3. Link your project:
+   ```bash
+   npx supabase link --project-ref your_project_id
+   ```
 
-# Push the database schema
-npx supabase db push
-```
+4. Push the database schema:
+   ```bash
+   npx supabase db push
+   ```
+
+### Troubleshooting Supabase Setup
+
+If you encounter any issues:
+
+1. **Wrong Database Connection**
+   - Double-check your database password in `.env.local`
+   - Ensure your project is active in the Supabase dashboard
+   - Try resetting your database password in Supabase dashboard
+
+2. **Project Linking Issues**
+   - Verify your project ID is correct
+   - Make sure you're logged in to Supabase CLI (`npx supabase login`)
+   - Check if your project is active in the dashboard
+
+3. **Permission Issues**
+   - Verify your service role key has the correct permissions
+   - Check if your project's database is not paused
 
 ### 4. Start the development server
 ```bash
