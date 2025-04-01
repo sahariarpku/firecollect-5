@@ -137,13 +137,20 @@ const ZoteroConnect = () => {
     setSelectedCollection(null);
     setLibraryItems([]);
     setIsLoadingItems(true);
+    
     try {
+      // Load collections
       const availableCollections = await ZoteroService.getCollections(library.type, library.id);
       setCollections(availableCollections);
-      toast.success(`Found ${availableCollections.length} collections in ${library.name}`);
+
+      // Load library items
+      const items = await ZoteroService.getLibraryItems(library.type, library.id);
+      setLibraryItems(items);
+      
+      toast.success(`Found ${items.length} papers in ${library.name}`);
     } catch (error) {
-      console.error('Error loading collections:', error);
-      toast.error('Failed to load collections');
+      console.error('Error loading library data:', error);
+      toast.error('Failed to load library data');
     } finally {
       setIsLoadingItems(false);
     }
@@ -294,7 +301,7 @@ const ZoteroConnect = () => {
                 </SelectContent>
               </Select>
 
-              {selectedLibrary && (
+              {collections.length > 0 && (
                 <Select
                   value={selectedCollection?.key}
                   onValueChange={(value) => {
@@ -317,12 +324,16 @@ const ZoteroConnect = () => {
             </div>
           </div>
 
-          {libraryItems.length > 0 && (
+          {isLoadingItems ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+            </div>
+          ) : libraryItems.length > 0 ? (
             <div className="space-y-6">
               <div>
                 <h1 className="text-2xl font-semibold mb-2">Research Summary</h1>
                 <p className="text-gray-600">
-                  Viewing saved research on "{selectedCollection?.name}". Found {libraryItems.length} papers related to the topic.
+                  Found {libraryItems.length} papers in {selectedCollection ? `collection "${selectedCollection.name}"` : selectedLibrary.name}.
                 </p>
               </div>
 
@@ -353,16 +364,62 @@ const ZoteroConnect = () => {
                 </Button>
               </div>
 
-              {isChatOpen && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-                  <div className="w-full max-w-4xl">
-                    <ZoteroChat
-                      papers={formattedPapers}
-                      onClose={() => setIsChatOpen(false)}
-                    />
-                  </div>
-                </div>
-              )}
+              <div className="rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Title</TableHead>
+                      <TableHead>Author</TableHead>
+                      <TableHead>Year</TableHead>
+                      <TableHead>Abstract</TableHead>
+                      <TableHead>DOI</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {libraryItems.map((item) => (
+                      <TableRow key={item.key}>
+                        <TableCell className="font-medium">{item.title}</TableCell>
+                        <TableCell>{ZoteroService.formatAuthors(item.creators)}</TableCell>
+                        <TableCell>{ZoteroService.getYearFromDate(item.date) || 'N/A'}</TableCell>
+                        <TableCell className="max-w-md">
+                          <ScrollArea className="h-24">
+                            <p className="text-sm text-gray-600">{item.abstractNote || 'No abstract available'}</p>
+                          </ScrollArea>
+                        </TableCell>
+                        <TableCell>
+                          {item.DOI ? (
+                            <a 
+                              href={`https://doi.org/${item.DOI}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-600 hover:text-blue-800 hover:underline"
+                            >
+                              {item.DOI}
+                            </a>
+                          ) : (
+                            <span className="text-gray-500">No DOI</span>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <p className="text-gray-600">No papers found in this library.</p>
+            </div>
+          )}
+
+          {isChatOpen && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+              <div className="w-full max-w-4xl">
+                <ZoteroChat
+                  papers={formattedPapers}
+                  onClose={() => setIsChatOpen(false)}
+                />
+              </div>
             </div>
           )}
         </>
