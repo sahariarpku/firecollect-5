@@ -24,34 +24,65 @@ Before you begin, ensure you have the following installed:
 
 ## Setup Instructions
 
-1. **Clone the repository**
+### 1. Clone the repository
 ```bash
 git clone https://github.com/sahariarpku/firecollect-5.git
 cd firecollect-5
 ```
 
-2. **Install dependencies**
+### 2. Install dependencies
 ```bash
 npm install
 # or
 yarn install
 ```
 
-3. **Environment Setup**
-Create a `.env.local` file in the root directory with the following variables:
-```env
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-NEXT_PUBLIC_FIRECRAWL_API_URL=https://api.firecrawl.dev
-```
+### 3. Supabase Setup
 
-4. **Database Setup**
-Run the Supabase migrations to set up your database:
+#### a. Create a Supabase Project
+1. Go to [Supabase](https://supabase.com) and sign in
+2. Create a new project
+3. Once created, go to Project Settings > API
+4. Note down the following credentials:
+   - Project URL
+   - Project API Keys (anon key and service_role key)
+   - Project Reference ID
+   - Database Password
+
+#### b. Configure Environment Variables
+1. Copy `.env.example` to `.env.local`:
+   ```bash
+   cp .env.example .env.local
+   ```
+2. Update `.env.local` with your Supabase credentials:
+   ```env
+   NEXT_PUBLIC_SUPABASE_URL=your_project_url
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
+   SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+   SUPABASE_DB_PASSWORD=your_database_password
+   SUPABASE_PROJECT_ID=your_project_id
+   ```
+
+#### c. Update Supabase Configuration
+1. Open `supabase/config.toml`
+2. Replace `project_id = "your-project-id"` with your actual project ID
+
+#### d. Initialize Supabase CLI
 ```bash
+# Install Supabase CLI if not already installed
+npm install supabase --save-dev
+
+# Initialize Supabase
+npx supabase init
+
+# Link to your project
+npx supabase link --project-ref your-project-id
+
+# Push the database schema
 npx supabase db push
 ```
 
-5. **Start the development server**
+### 4. Start the development server
 ```bash
 npm run dev
 # or
@@ -100,6 +131,34 @@ Two types of API keys are required:
 2. **Zotero API Key**: For Zotero integration
    - Generate from [Zotero settings](https://www.zotero.org/settings/keys)
    - Add it when connecting Zotero
+
+## Troubleshooting
+
+### Common Database Issues
+
+1. **Wrong Database Connection**
+   - Ensure your `.env.local` has the correct Supabase credentials
+   - Make sure `supabase/config.toml` has the correct project ID
+   - Try relinking your project:
+     ```bash
+     npx supabase link --project-ref your-project-id --debug
+     ```
+
+2. **Migration Errors**
+   - Clear local Supabase configuration:
+     ```bash
+     rm -rf .supabase
+     npx supabase init
+     ```
+   - Relink and push:
+     ```bash
+     npx supabase link --project-ref your-project-id
+     npx supabase db push
+     ```
+
+3. **Permission Issues**
+   - Verify your service role key has the correct permissions
+   - Check RLS policies in Supabase dashboard
 
 ## Development
 
