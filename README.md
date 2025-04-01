@@ -1,137 +1,141 @@
-# FireCollect 3
+# FireCollect
 
-A powerful research tool that helps you search, collect, and analyze academic papers using AI. Built with Next.js, Supabase, and AI integration.
+FireCollect is a powerful research tool that helps academics and researchers manage their papers, PDFs, and Zotero libraries. It features AI-powered search capabilities, PDF analysis, and seamless Zotero integration.
+
+![FireCollect Interface](./public/firecollect-interface.png)
 
 ## Features
 
-- 🔍 Search academic papers across multiple databases
-- 📚 Save and organize research papers
-- 📊 Export results to Excel
-- 🤖 AI-powered paper analysis
-- 📱 Responsive design
-- 🔐 Secure authentication with Supabase
+- 🔍 **Academic Paper Search**: Search and analyze academic papers with AI assistance
+- 📄 **PDF Analysis**: Upload and analyze PDFs with automatic metadata extraction
+- 📚 **Zotero Integration**: Connect and manage your Zotero library
+- 🤖 **AI-Powered**: Intelligent paper analysis and chat capabilities
+- 📱 **Modern UI**: Clean, responsive interface with dark mode support
+- 🔐 **Secure**: Built-in authentication and API key management
 
 ## Prerequisites
 
-Before you begin, ensure you have installed:
-
-- [Node.js](https://nodejs.org/) (v18 or newer)
-- [npm](https://www.npmjs.com/) (comes with Node.js)
-- [Git](https://git-scm.com/)
+Before you begin, ensure you have the following installed:
+- Node.js (v18 or higher)
+- npm or yarn
+- Git
+- Supabase account (for database and authentication)
+- Firecrawl API key (for AI features)
 
 ## Setup Instructions
 
-### 1. Clone the Repository
-
+1. **Clone the repository**
 ```bash
-git clone https://github.com/sahariarpku/firecollect-3.git
-cd firecollect-3
+git clone https://github.com/sahariarpku/firecollect-5.git
+cd firecollect-5
 ```
 
-### 2. Install Dependencies
-
+2. **Install dependencies**
 ```bash
 npm install
+# or
+yarn install
 ```
 
-### 3. Set Up Supabase
-
-1. Go to [Supabase](https://supabase.com/) and create a new account
-2. Create a new project
-3. Once your project is created, go to Project Settings > API
-4. Copy your `Project URL` and `anon` public API key
-
-### 4. Configure Environment Variables
-
-1. Create a `.env` file in the root directory
-2. Add the following variables:
-
+3. **Environment Setup**
+Create a `.env.local` file in the root directory with the following variables:
 ```env
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+NEXT_PUBLIC_FIRECRAWL_API_URL=https://api.firecrawl.dev
 ```
 
-### 5. Set Up the Database
+4. **Database Setup**
+Run the Supabase migrations to set up your database:
+```bash
+npx supabase db push
+```
 
-1. Go to your Supabase project's SQL editor
-2. Copy and paste the contents of `supabase/init.sql` into the SQL editor
-3. Run the SQL script to create the necessary tables and policies
-
-### 6. Run the Development Server
-
+5. **Start the development server**
 ```bash
 npm run dev
+# or
+yarn dev
 ```
 
-The app will be available at [http://localhost:3000](http://localhost:3000)
+The application will be available at `http://localhost:3000`
 
-## Using the App
+## Project Structure
 
-### 1. Authentication
+```
+firecollect-5/
+├── src/
+│   ├── components/        # React components
+│   ├── services/         # API and service integrations
+│   ├── lib/             # Utility functions and configurations
+│   ├── types/           # TypeScript type definitions
+│   └── app/             # Next.js app router files
+├── public/              # Static assets
+├── supabase/           # Supabase configurations and migrations
+└── styles/             # Global styles and CSS modules
+```
 
-1. Sign up for a new account or log in
-2. The app will automatically create necessary storage buckets and tables
+## Key Components
 
-### 2. Searching Papers
+- **ResearchManager**: Handles academic paper search and analysis
+- **PDFUploadView**: Manages PDF uploads and analysis
+- **ZoteroConnect**: Handles Zotero library integration
+- **UserProfile**: User settings and API key management
 
-1. Enter your search query in the search bar
-2. Click "Search" or press Enter
-3. Wait for the results to load
-4. View paper details, download results, or start a chat about the papers
+## Authentication
 
-### 3. Managing API Keys
+The app uses Supabase Authentication. Users can:
+- Sign up with email/password
+- Sign in with existing account
+- Reset password
+- Manage API keys and settings
 
-1. Go to Settings
-2. Enter your Firecrawl API key
-3. Click Save
+## API Keys
 
-### 4. Exporting Results
+Two types of API keys are required:
+1. **Firecrawl API Key**: For AI-powered paper analysis
+   - Get it from [firecrawl.dev](https://firecrawl.dev)
+   - Add it in the user settings
 
-1. After a search, click the "Download Excel" button
-2. The results will be downloaded as an Excel file
+2. **Zotero API Key**: For Zotero integration
+   - Generate from [Zotero settings](https://www.zotero.org/settings/keys)
+   - Add it when connecting Zotero
 
-## Troubleshooting
+## Development
 
-### Common Issues
+### Running Tests
+```bash
+npm run test
+# or
+yarn test
+```
 
-1. **Network Error**
-   - Check your internet connection
-   - Verify your Firecrawl API key is valid
-   - Ensure you can access scholar.google.com and researchgate.net
+### Building for Production
+```bash
+npm run build
+# or
+yarn build
+```
 
-2. **Database Errors**
-   - Verify your Supabase credentials in `.env`
-   - Check if the database tables were created correctly
-   - Ensure RLS policies are properly set up
-
-3. **Authentication Issues**
-   - Clear your browser cache
-   - Check if your Supabase project is running
-   - Verify your environment variables
-
-### Getting Help
-
-If you encounter any issues:
-
-1. Check the console for error messages (F12 in most browsers)
-2. Look for error messages in the app's activity log
-3. Create an issue on GitHub with:
-   - Description of the problem
-   - Steps to reproduce
-   - Error messages
-   - Screenshots if applicable
+### Linting
+```bash
+npm run lint
+# or
+yarn lint
+```
 
 ## Contributing
 
 1. Fork the repository
-2. Create a new branch
-3. Make your changes
-4. Submit a pull request
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
 
 ## License
 
-MIT License - feel free to use this project for any purpose.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## Contact
+## Support
 
-For questions or support, create an issue on GitHub or contact the maintainers.
+For support, please open an issue in the GitHub repository or contact the maintainers.

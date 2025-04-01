@@ -1,15 +1,14 @@
-
 import { motion } from 'framer-motion';
 
-export const Footer = () => {
+export function Footer() {
   return (
-    <motion.footer
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3, delay: 0.4 }}
-      className="w-full max-w-3xl mx-auto mt-8 mb-4"
-    >
-      {/* Footer content removed as requested */}
-    </motion.footer>
+    <footer className="border-t bg-white">
+      <div className="container mx-auto px-4 py-6">
+        <div className="flex flex-col items-center justify-center space-y-2 text-sm text-gray-600">
+          <p>© {new Date().getFullYear()} FireCollect. All rights reserved.</p>
+          <p>Built with ❤️ for researchers</p>
+        </div>
+      </div>
+    </footer>
   );
-};
+}
