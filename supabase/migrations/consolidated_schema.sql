@@ -1,5 +1,68 @@
--- Enable UUID extension
+-- Enable required extensions
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+-- Create ai_models table
+CREATE TABLE IF NOT EXISTS public.ai_models (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    name TEXT NOT NULL,
+    provider TEXT NOT NULL,
+    model_name TEXT NOT NULL,
+    api_key TEXT,
+    base_url TEXT,
+    is_default BOOLEAN DEFAULT false,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- Enable RLS for ai_models
+ALTER TABLE public.ai_models ENABLE ROW LEVEL SECURITY;
+
+-- Create policies for ai_models
+CREATE POLICY "Anyone can read ai_models"
+    ON public.ai_models FOR SELECT
+    TO authenticated
+    USING (true);
+
+CREATE POLICY "Only admins can insert ai_models"
+    ON public.ai_models FOR INSERT
+    TO authenticated
+    WITH CHECK (auth.jwt() ->> 'email' = any(string_to_array(current_setting('app.admin_emails'), ',')));
+
+CREATE POLICY "Only admins can update ai_models"
+    ON public.ai_models FOR UPDATE
+    TO authenticated
+    USING (auth.jwt() ->> 'email' = any(string_to_array(current_setting('app.admin_emails'), ',')))
+    WITH CHECK (auth.jwt() ->> 'email' = any(string_to_array(current_setting('app.admin_emails'), ',')));
+
+CREATE POLICY "Only admins can delete ai_models"
+    ON public.ai_models FOR DELETE
+    TO authenticated
+    USING (auth.jwt() ->> 'email' = any(string_to_array(current_setting('app.admin_emails'), ',')));
+
+-- Create user_settings table
+CREATE TABLE IF NOT EXISTS public.user_settings (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    ai_model UUID REFERENCES public.ai_models(id),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+    UNIQUE(user_id)
+);
+
+-- Enable RLS for user_settings
+ALTER TABLE public.user_settings ENABLE ROW LEVEL SECURITY;
+
+-- Create policies for user_settings
+CREATE POLICY "Users can read their own settings"
+    ON public.user_settings FOR SELECT
+    TO authenticated
+    USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can update their own settings"
+    ON public.user_settings FOR UPDATE
+    TO authenticated
+    USING (auth.uid() = user_id)
+    WITH CHECK (auth.uid() = user_id);
 
 -- Create searches table
 CREATE TABLE IF NOT EXISTS searches (
@@ -69,16 +132,18 @@ CREATE TABLE IF NOT EXISTS firecrawl_api_keys (
 );
 
 -- Create zotero_credentials table
-CREATE TABLE IF NOT EXISTS zotero_credentials (
-    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+CREATE TABLE IF NOT EXISTS public.zotero_credentials (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
     api_key TEXT NOT NULL,
-    user_id TEXT NOT NULL,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    zotero_user_id TEXT NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+    UNIQUE(user_id)
 );
 
--- Create index for user_id in zotero_credentials
-CREATE INDEX IF NOT EXISTS idx_zotero_credentials_user_id ON zotero_credentials(user_id);
+-- Create index for zotero_credentials
+CREATE INDEX IF NOT EXISTS idx_zotero_credentials_user_id ON public.zotero_credentials(user_id);
 
 -- Create storage bucket for PDFs if it doesn't exist
 DO $$
@@ -91,14 +156,14 @@ BEGIN
     END IF;
 END $$;
 
--- Enable RLS
+-- Enable RLS for all tables
 ALTER TABLE searches ENABLE ROW LEVEL SECURITY;
 ALTER TABLE papers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE pdf_uploads ENABLE ROW LEVEL SECURITY;
 ALTER TABLE pdf_batches ENABLE ROW LEVEL SECURITY;
 ALTER TABLE batch_pdfs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE firecrawl_api_keys ENABLE ROW LEVEL SECURITY;
-ALTER TABLE zotero_credentials ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.zotero_credentials ENABLE ROW LEVEL SECURITY;
 
 -- Create policies that allow all operations (for development)
 DO $$
@@ -154,12 +219,11 @@ BEGIN
 END $$;
 
 -- Create storage policy
-DO $$
-BEGIN
-    IF NOT EXISTS (
-        SELECT 1 FROM storage.policies WHERE name = 'Allow public access to PDFs'
-    ) THEN
-        CREATE POLICY "Allow public access to PDFs" ON storage.objects
-            FOR ALL USING (bucket_id = 'pdfs');
-    END IF;
-END $$;
+DROP POLICY IF EXISTS "Allow public access to PDFs" ON storage.objects;
+CREATE POLICY "Allow public access to PDFs" ON storage.objects
+    FOR ALL USING (bucket_id = 'pdfs');
+
+-- Insert default AI model (without API key)
+INSERT INTO public.ai_models (name, provider, model_name, is_default)
+VALUES ('Default OpenAI', 'openai', 'gpt-4-turbo-preview', true)
+ON CONFLICT DO NOTHING; 
