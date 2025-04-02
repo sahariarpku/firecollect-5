@@ -4,7 +4,7 @@ CREATE TABLE IF NOT EXISTS public.ai_models (
     name TEXT NOT NULL,
     provider TEXT NOT NULL,
     model_name TEXT NOT NULL,
-    api_key TEXT NOT NULL,
+    api_key TEXT,
     base_url TEXT,
     is_default BOOLEAN DEFAULT false,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
@@ -49,16 +49,11 @@ CREATE TABLE IF NOT EXISTS public.user_settings (
 -- Enable RLS
 ALTER TABLE public.user_settings ENABLE ROW LEVEL SECURITY;
 
--- Create policies
-CREATE POLICY "Users can view their own settings"
+-- Create policies for user_settings
+CREATE POLICY "Users can read their own settings"
     ON public.user_settings FOR SELECT
     TO authenticated
     USING (auth.uid() = user_id);
-
-CREATE POLICY "Users can insert their own settings"
-    ON public.user_settings FOR INSERT
-    TO authenticated
-    WITH CHECK (auth.uid() = user_id);
 
 CREATE POLICY "Users can update their own settings"
     ON public.user_settings FOR UPDATE
@@ -66,11 +61,7 @@ CREATE POLICY "Users can update their own settings"
     USING (auth.uid() = user_id)
     WITH CHECK (auth.uid() = user_id);
 
-CREATE POLICY "Users can delete their own settings"
-    ON public.user_settings FOR DELETE
-    TO authenticated
-    USING (auth.uid() = user_id);
-
--- Insert default AI model
-insert into public.ai_models (name, provider, model_name, api_key, is_default)
-values ('Default OpenAI', 'openai', 'gpt-4-turbo-preview', current_setting('app.openai_api_key'), true); 
+-- Insert default AI model (without API key)
+INSERT INTO public.ai_models (name, provider, model_name, is_default)
+VALUES ('Default OpenAI', 'openai', 'gpt-4-turbo-preview', true)
+ON CONFLICT DO NOTHING; 
